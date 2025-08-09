@@ -1,0 +1,28 @@
+/* src/components/TripLegForm.module.css */
+.form {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+.heading {
+  margin-bottom: 8px;
+  font-size: 18px;
+}
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.field {
+  flex: 1;
+  min-width: 120px;
+}
+.buttonContainer {
+  margin-top: 12px;
+  text-align: right;
+}
+.error {
+  color: #ef4444; /* error color */
+  margin-bottom: 8px;
+}
