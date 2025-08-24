@@ -51,11 +51,23 @@ export function useTrips(options: UseTripsOptions = {}) {
             hint: (error as any).hint,
             code: (error as any).code,
           });
-          setError(new Error(error.message));
+
+          // より詳細を state に渡す
+          const msg = [
+            error.message,
+            (error as any).details,
+            (error as any).hint,
+            (error as any).code,
+          ]
+            .filter(Boolean)
+            .join(" | ");
+
+          setError(new Error(msg));
           setTrips([]);
           return;
         }
 
+        console.log("Supabase trips select success", data);
         setTrips(data ?? []);
       } catch (e) {
         if (!aliveRef.current) return;

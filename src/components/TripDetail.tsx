@@ -11,6 +11,7 @@ import TripLegForm from "@/components/TripLegForm";
 import AccommodationForm from "@/components/AccommodationForm";
 import { Trip, TripLeg, Accommodation } from "@/lib/hooks/types";
 import MapViewer from "@/components/MapViewer"; // ← route/pins を渡す版
+import CostDashboard from "@/components/CostDashboard";
 
 export default function TripDetail() {
   const { id } = useParams() as { id: string };
@@ -149,6 +150,11 @@ export default function TripDetail() {
         <p style={{ fontSize: 12, color: "#666" }}>
           作成日: {new Date(trip.created_at).toLocaleString()}
         </p>
+      </Card>
+
+      <Card>
+        <h2 style={{ fontSize: 18, marginBottom: 12 }}>費用ダッシュボード</h2>
+        <CostDashboard tripId={id} />
       </Card>
 
       {/* 地図表示（どちらかがあれば） */}
