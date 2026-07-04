@@ -3,16 +3,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
-
-export type Trip = {
-  id: string;
-  title: string;
-  start_date: string;
-  end_date: string;
-  budget: number;
-  created_at: string;
-  // user_id?: string; // 必要なら有効化
-};
+import type { Trip } from "@/lib/hooks/types";
 
 type UseTripsOptions = {
   userId?: string; // RLSでユーザー毎に絞る場合に使う
@@ -47,18 +38,13 @@ export function useTrips(options: UseTripsOptions = {}) {
         if (error) {
           console.error("Supabase trips select error", {
             message: error.message,
-            details: (error as any).details,
-            hint: (error as any).hint,
-            code: (error as any).code,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
           });
 
           // より詳細を state に渡す
-          const msg = [
-            error.message,
-            (error as any).details,
-            (error as any).hint,
-            (error as any).code,
-          ]
+          const msg = [error.message, error.details, error.hint, error.code]
             .filter(Boolean)
             .join(" | ");
 
@@ -79,7 +65,7 @@ export function useTrips(options: UseTripsOptions = {}) {
         setLoading(false);
       }
     },
-    [userId]
+    [userId],
   );
 
   useEffect(() => {

@@ -39,8 +39,12 @@ export default function CostDashboard({ tripId }: { tripId: string }) {
         if (!r.ok) throw new Error(`API ${r.status}`);
         const json = await r.json();
         if (alive) setData(json);
-      } catch (e: any) {
-        if (alive) setErr(e?.message ?? "読み込みに失敗しました");
+      } catch (error: unknown) {
+        if (alive) {
+          const message =
+            error instanceof Error ? error.message : "読み込みに失敗しました";
+          setErr(message);
+        }
       } finally {
         if (alive) setLoading(false);
       }
@@ -104,7 +108,11 @@ export default function CostDashboard({ tripId }: { tripId: string }) {
                 ))}
               </Pie>
               <Tooltip
-                formatter={(v: any) => `¥${Number(v).toLocaleString()}`}
+                formatter={(value: unknown) => {
+                  const numericValue =
+                    typeof value === "number" ? value : Number(value ?? 0);
+                  return `¥${numericValue.toLocaleString()}`;
+                }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -121,7 +129,11 @@ export default function CostDashboard({ tripId }: { tripId: string }) {
               <XAxis dataKey="date" />
               <YAxis tickFormatter={(v) => `¥${Number(v).toLocaleString()}`} />
               <Tooltip
-                formatter={(v: any) => `¥${Number(v).toLocaleString()}`}
+                formatter={(value: unknown) => {
+                  const numericValue =
+                    typeof value === "number" ? value : Number(value ?? 0);
+                  return `¥${numericValue.toLocaleString()}`;
+                }}
               />
               <Bar dataKey="cost" />
             </BarChart>

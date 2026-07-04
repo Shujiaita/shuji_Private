@@ -1,9 +1,41 @@
 import { supabase } from "@/lib/supabaseClient";
-import { geocodeCityNominatim } from "./geocode";
+
+export async function geocodeCityNominatim(city: string) {
+  const name = city.trim();
+  if (!name) return null;
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&city=${encodeURIComponent(name)}`,
+      {
+        headers: {
+          "Accept-Language": "en",
+        },
+      },
+    );
+
+    if (!response.ok) return null;
+
+    const data = (await response.json()) as Array<{
+      lat?: string;
+      lon?: string;
+    }>;
+
+    const first = data[0];
+    if (!first?.lat || !first?.lon) return null;
+
+    return {
+      lat: Number(first.lat),
+      lng: Number(first.lon),
+    };
+  } catch {
+    return null;
+  }
+}
 
 /** 都市名を city_coords で解決。なければ Nominatim で作って upsert し、座標を返す */
 export async function ensureCityCoords(
-  city: string
+  city: string,
 ): Promise<{ lat: number; lng: number } | null> {
   const name = city.trim();
   if (!name) return null;
@@ -35,7 +67,7 @@ export async function ensureCityCoords(
       lng: geo.lng,
       aliases: [],
     },
-    { onConflict: "city" }
+    { onConflict: "city" },
   );
   if (upErr) {
     console.error("upsert city_coords failed", upErr);

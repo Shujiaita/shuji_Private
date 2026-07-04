@@ -9,7 +9,7 @@ import Card from "@/components/Card";
 import Button from "@/components/Button";
 import TripLegForm from "@/components/TripLegForm";
 import AccommodationForm from "@/components/AccommodationForm";
-import { Trip, TripLeg, Accommodation } from "@/lib/hooks/types";
+import { type Trip, type TripLeg, type Accommodation } from "@/lib/hooks/types";
 import MapViewer from "@/components/MapViewer"; // ← route/pins を渡す版
 import CostDashboard from "@/components/CostDashboard";
 
@@ -31,14 +31,14 @@ export default function TripDetail() {
       setError(null);
 
       const [tRes, lRes, aRes] = await Promise.all([
-        supabase.from<Trip>("trips").select("*").eq("id", id).single(),
+        supabase.from("trips").select("*").eq("id", id).single(),
         supabase
-          .from<TripLeg>("trip_legs")
+          .from("trip_legs")
           .select("*")
           .eq("trip_id", id)
           .order("departure", { ascending: true }), // ルート順
         supabase
-          .from<Accommodation>("accommodations")
+          .from("accommodations")
           .select("*")
           .eq("trip_id", id)
           .order("check_in", { ascending: true }),
@@ -51,7 +51,7 @@ export default function TripDetail() {
         setError(tRes.error.message);
         setTrip(null);
       } else {
-        setTrip((tRes.data as Trip) ?? null);
+        setTrip((tRes.data as Trip | null) ?? null);
       }
 
       if (lRes.error) console.error("Trip legs load error:", lRes.error);
@@ -74,14 +74,22 @@ export default function TripDetail() {
   const route = useMemo<[number, number][]>(() => {
     const out: [number, number][] = [];
     for (const leg of legs) {
-      const anyLeg = leg as any;
+      const legData = leg as TripLeg & {
+        from_lat?: number;
+        from_lng?: number;
+        to_lat?: number;
+        to_lng?: number;
+      };
       const fromOk =
-        Number.isFinite(anyLeg.from_lat) && Number.isFinite(anyLeg.from_lng);
+        Number.isFinite(legData.from_lat) && Number.isFinite(legData.from_lng);
       const toOk =
-        Number.isFinite(anyLeg.to_lat) && Number.isFinite(anyLeg.to_lng);
+        Number.isFinite(legData.to_lat) && Number.isFinite(legData.to_lng);
 
       if (fromOk) {
-        const p: [number, number] = [anyLeg.from_lat, anyLeg.from_lng];
+        const p: [number, number] = [
+          legData.from_lat as number,
+          legData.from_lng as number,
+        ];
         if (
           !out.length ||
           out[out.length - 1][0] !== p[0] ||
@@ -91,7 +99,10 @@ export default function TripDetail() {
         }
       }
       if (toOk) {
-        const p: [number, number] = [anyLeg.to_lat, anyLeg.to_lng];
+        const p: [number, number] = [
+          legData.to_lat as number,
+          legData.to_lng as number,
+        ];
         if (
           !out.length ||
           out[out.length - 1][0] !== p[0] ||
@@ -101,16 +112,19 @@ export default function TripDetail() {
         }
       }
     }
-    return out.filter(([lat, lng]) => Math.abs(lat) + Math.abs(lng) > 0);
+    return out.filter(
+      (point): point is [number, number] =>
+        Math.abs(point[0]) + Math.abs(point[1]) > 0,
+    );
   }, [legs]);
 
   // 宿泊ピン用
   const pins = useMemo<[number, number][]>(() => {
     return acms
-      .map((a) => a as any)
+      .map((a) => a as Accommodation & { lat?: number; lng?: number })
       .filter((a) => Number.isFinite(a.lat) && Number.isFinite(a.lng))
-      .map((a) => [a.lat as number, a.lng as number])
-      .filter(([lat, lng]) => Math.abs(lat) + Math.abs(lng) > 0);
+      .map((a) => [a.lat as number, a.lng as number] as [number, number])
+      .filter((point) => Math.abs(point[0]) + Math.abs(point[1]) > 0);
   }, [acms]);
 
   if (loading) {
@@ -189,7 +203,7 @@ export default function TripDetail() {
           tripId={id}
           onSuccess={() =>
             supabase
-              .from<TripLeg>("trip_legs")
+              .from("trip_legs")
               .select("*")
               .eq("trip_id", id)
               .order("departure", { ascending: true })
@@ -221,7 +235,7 @@ export default function TripDetail() {
           tripId={id}
           onSuccess={() =>
             supabase
-              .from<Accommodation>("accommodations")
+              .from("accommodations")
               .select("*")
               .eq("trip_id", id)
               .order("check_in", { ascending: true })

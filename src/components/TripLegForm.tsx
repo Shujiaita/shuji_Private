@@ -43,7 +43,7 @@ export default function TripLegForm({
 
       if (!fromGeo || !toGeo) {
         setError(
-          "都市名を座標に変換できませんでした。表記を見直してください。"
+          "都市名を座標に変換できませんでした。表記を見直してください。",
         );
         return;
       }
@@ -76,9 +76,11 @@ export default function TripLegForm({
       setCost("");
       setDeparture("");
       setArrival("");
-    } catch (e: any) {
-      console.error(e);
-      setError(e?.message ?? "送信中にエラーが発生しました");
+    } catch (error: unknown) {
+      console.error(error);
+      setError(
+        error instanceof Error ? error.message : "送信中にエラーが発生しました",
+      );
     } finally {
       setSubmitting(false);
     }

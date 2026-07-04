@@ -50,7 +50,7 @@ export default function HomePage() {
       {loading ? (
         <p className="p-4">読み込み中…</p>
       ) : (
-        <TripList trips={trips} />
+        <TripList trips={trips} loading={loading} />
       )}
     </main>
   );

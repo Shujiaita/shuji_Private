@@ -1,6 +1,7 @@
 // src/components/MapClient.tsx
 "use client";
 
+import L, { type LatLngBounds, type LatLngExpression } from "leaflet";
 import {
   MapContainer,
   TileLayer,
@@ -17,28 +18,24 @@ type Props = { route?: LatLng[]; pins?: LatLng[]; coordinates?: LatLng[] };
 
 function FitToBounds({ all }: { all: LatLng[] }) {
   const map = useMap();
+
   useEffect(() => {
     if (all.length === 0) return;
+
     if (all.length === 1) {
       map.setView(all[0], 8, { animate: false });
-    } else {
-      // @ts-ignore: leaflet の global L を使わず bounds を逐次計算
-      const bounds = all.reduce(
-        (acc: any, [lat, lng]: LatLng) => acc.extend([lat, lng]),
-        // 初期値
-        (window as any).L?.latLngBounds
-          ? (window as any).L.latLngBounds([all[0], all[0]])
-          : { extend: () => ({}) }
-      );
-      // L が無い環境でもコケないようにガード
-      try {
-        // @ts-ignore
-        map.fitBounds(bounds, { padding: [40, 40], animate: false });
-      } catch {
-        /* noop */
-      }
+      return;
     }
+
+    const initialPoint = L.latLng(all[0][0], all[0][1]);
+    const bounds = all.reduce<LatLngBounds>(
+      (acc, [lat, lng]) => acc.extend([lat, lng] as LatLngExpression),
+      L.latLngBounds(initialPoint, initialPoint),
+    );
+
+    map.fitBounds(bounds, { padding: [40, 40], animate: false });
   }, [map, all]);
+
   return null;
 }
 
@@ -46,8 +43,10 @@ export default function MapClient(props: Props) {
   // coordinates だけ渡された場合も route として扱う
   const route: LatLng[] = useMemo(
     () =>
-      props.route && props.route.length ? props.route : props.coordinates ?? [],
-    [props.route, props.coordinates]
+      props.route && props.route.length
+        ? props.route
+        : (props.coordinates ?? []),
+    [props.route, props.coordinates],
   );
   const pins: LatLng[] = useMemo(() => props.pins ?? [], [props.pins]);
 
@@ -58,9 +57,9 @@ export default function MapClient(props: Props) {
         ([lat, lng]) =>
           Number.isFinite(lat) &&
           Number.isFinite(lng) &&
-          Math.abs(lat) + Math.abs(lng) > 0
+          Math.abs(lat) + Math.abs(lng) > 0,
       ),
-    [route]
+    [route],
   );
   const cleanPins = useMemo(
     () =>
@@ -68,9 +67,9 @@ export default function MapClient(props: Props) {
         ([lat, lng]) =>
           Number.isFinite(lat) &&
           Number.isFinite(lng) &&
-          Math.abs(lat) + Math.abs(lng) > 0
+          Math.abs(lat) + Math.abs(lng) > 0,
       ),
-    [pins]
+    [pins],
   );
 
   const anyPoints = cleanRoute.length > 0 || cleanPins.length > 0;
